@@ -1,8 +1,10 @@
+import gc
 import re
 import time
 from datetime import datetime, timezone
 
 from config import BASE_SITE, CATEGORY_PATHS, SCRAPE_INTERVAL, logger
+import store as store_module
 from store import add_items
 
 
@@ -35,9 +37,9 @@ def scrape_magnets():
 
     logger.info("Starting scrape...")
     driver = Driver(uc=True, headless=True)
+    driver.set_page_load_timeout(30)
 
     source_urls = build_paginated_urls(BASE_URLS)
-    items = []
     movie_pattern = r'-20\d{2}-.*\.html$'
 
     try:
@@ -46,7 +48,7 @@ def scrape_magnets():
             logger.info(f"[{idx+1}/{len(source_urls)}] Index page: {source_url}")
             try:
                 driver.get(source_url)
-                time.sleep(5)
+                time.sleep(3)
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 for link in soup.find_all('a', href=True):
                     href = link['href']
@@ -55,19 +57,27 @@ def scrape_magnets():
                     if re.search(movie_pattern, href.lower()):
                         if 'dvdscr' not in href.lower() and href not in movie_urls_pool:
                             movie_urls_pool.append(href)
+                del soup
             except Exception as e:
                 logger.warning(f"Skipping {source_url}: {e}")
 
         logger.info(f"Found {len(movie_urls_pool)} movie pages")
 
+        with store_module.scrape_lock:
+            already_scraped = {item["link"] for item in store_module.scraped_items}
+
         for idx, movie_url in enumerate(movie_urls_pool):
+            if movie_url in already_scraped:
+                logger.info(f"[{idx+1}/{len(movie_urls_pool)}] Skipping (already scraped): {movie_url}")
+                continue
             logger.info(f"[{idx+1}/{len(movie_urls_pool)}] Scraping: {movie_url}")
             try:
                 driver.get(movie_url)
-                time.sleep(4)
+                time.sleep(3)
                 movie_soup = BeautifulSoup(driver.page_source, 'html.parser')
                 magnets = movie_soup.find_all('a', href=re.compile(r'^magnet:\?'))
 
+                movie_items = []
                 for magnet in magnets:
                     magnet_link = magnet['href']
                     if 'dvdscr' in magnet_link.lower():
@@ -88,7 +98,7 @@ def scrape_magnets():
                     size_match = re.search(r'xl=(\d+)', magnet_link)
                     size = int(size_match.group(1)) if size_match else 0
 
-                    items.append({
+                    movie_items.append({
                         "title": clean_title,
                         "magnet": magnet_link,
                         "link": movie_url,
@@ -96,6 +106,14 @@ def scrape_magnets():
                         "date": datetime.now(timezone.utc),
                         "category": "2000",
                     })
+
+                if movie_items:
+                    add_items(movie_items)
+                    logger.info(f"  Got {len(movie_items)} magnets, saved to disk")
+                else:
+                    logger.warning(f"  No magnets found, skipping: {movie_url}")
+                del movie_soup
+                gc.collect()
             except Exception as e:
                 logger.error(f"Failed {movie_url}: {e}")
 
@@ -105,8 +123,9 @@ def scrape_magnets():
         except:
             pass
 
-    new_count, expired_count = add_items(items)
-    logger.info(f"Scrape complete. {new_count} new, {expired_count} expired, {len(items)} scraped.")
+    with store_module.scrape_lock:
+        total = len(store_module.scraped_items)
+    logger.info(f"Scrape complete. {total} total items in store.")
 
 
 def scrape_loop():
