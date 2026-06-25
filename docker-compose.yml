@@ -1,0 +1,15 @@
+services:
+  torznab:
+    build: .
+    platform: linux/amd64
+    container_name: rssgen-torznab
+    ports:
+      - "6945:6945"
+    environment:
+      - API_KEY=rssgen123
+      - SCRAPE_INTERVAL=3600
+      - BASE_SITE=https://www.5movierulz.house
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    shm_size: "2gb"
