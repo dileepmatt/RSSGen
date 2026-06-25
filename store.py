@@ -33,10 +33,17 @@ def load_data():
     try:
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
+        deduped = []
         for item in data:
             item["date"] = datetime.fromisoformat(item["date"])
-            seen_magnets.add(magnet_id(item["magnet"]))
-        scraped_items = data
+            mid = magnet_id(item["magnet"])
+            if mid not in seen_magnets:
+                seen_magnets.add(mid)
+                deduped.append(item)
+        scraped_items = deduped
+        if len(deduped) < len(data):
+            logger.info(f"Removed {len(data) - len(deduped)} duplicates from disk.")
+            save_data()
         logger.info(f"Loaded {len(scraped_items)} items from disk.")
     except Exception as e:
         logger.error(f"Failed to load data.json: {e}")
