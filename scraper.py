@@ -2,7 +2,7 @@ import re
 import time
 from datetime import datetime, timezone
 
-from config import BASE_SITE, CATEGORY_PATHS, SCRAPE_INTERVAL
+from config import BASE_SITE, CATEGORY_PATHS, SCRAPE_INTERVAL, logger
 from store import add_items
 
 
@@ -33,7 +33,7 @@ def scrape_magnets():
     import undetected_chromedriver as uc
     from bs4 import BeautifulSoup
 
-    print(f"[{datetime.now()}] Starting scrape...")
+    logger.info("Starting scrape...")
     options = uc.ChromeOptions()
     options.add_argument('--headless')
     options.add_argument('--no-sandbox')
@@ -48,7 +48,7 @@ def scrape_magnets():
     try:
         movie_urls_pool = []
         for idx, source_url in enumerate(source_urls):
-            print(f"  [{idx+1}/{len(source_urls)}] Index page: {source_url}")
+            logger.info(f"[{idx+1}/{len(source_urls)}] Index page: {source_url}")
             try:
                 driver.get(source_url)
                 time.sleep(5)
@@ -61,12 +61,12 @@ def scrape_magnets():
                         if 'dvdscr' not in href.lower() and href not in movie_urls_pool:
                             movie_urls_pool.append(href)
             except Exception as e:
-                print(f"  Skipping {source_url}: {e}")
+                logger.warning(f"Skipping {source_url}: {e}")
 
-        print(f"  Found {len(movie_urls_pool)} movie pages")
+        logger.info(f"Found {len(movie_urls_pool)} movie pages")
 
         for idx, movie_url in enumerate(movie_urls_pool):
-            print(f"  [{idx+1}/{len(movie_urls_pool)}] Scraping: {movie_url}")
+            logger.info(f"[{idx+1}/{len(movie_urls_pool)}] Scraping: {movie_url}")
             try:
                 driver.get(movie_url)
                 time.sleep(4)
@@ -102,7 +102,7 @@ def scrape_magnets():
                         "category": "2000",
                     })
             except Exception as e:
-                print(f"  Failed {movie_url}: {e}")
+                logger.error(f"Failed {movie_url}: {e}")
 
     finally:
         try:
@@ -111,7 +111,7 @@ def scrape_magnets():
             pass
 
     new_count, expired_count = add_items(items)
-    print(f"[{datetime.now()}] Scrape complete. {new_count} new, {expired_count} expired, {len(items)} scraped.")
+    logger.info(f"Scrape complete. {new_count} new, {expired_count} expired, {len(items)} scraped.")
 
 
 def scrape_loop():
@@ -119,5 +119,5 @@ def scrape_loop():
         try:
             scrape_magnets()
         except Exception as e:
-            print(f"Scrape loop error: {e}")
+            logger.error(f"Scrape loop error: {e}")
         time.sleep(SCRAPE_INTERVAL)

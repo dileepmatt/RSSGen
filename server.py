@@ -2,7 +2,7 @@ import threading
 
 from flask import Flask, request, Response
 
-from config import API_KEY, SCRAPE_INTERVAL, PORT
+from config import API_KEY, SCRAPE_INTERVAL, PORT, logger
 import store
 from scraper import scrape_loop
 from torznab import caps_xml, error_xml, results_xml
@@ -55,6 +55,6 @@ if __name__ == "__main__":
     scrape_thread = threading.Thread(target=scrape_loop, daemon=True)
     scrape_thread.start()
 
-    print(f"Torznab server starting on http://localhost:{PORT}")
-    print(f"Add to Prowlarr/Jackett as: http://localhost:{PORT}/api  (API key: {API_KEY})")
+    logger.info(f"Torznab server starting on http://localhost:{PORT}")
+    logger.info(f"Add to Prowlarr/Jackett as: http://localhost:{PORT}/api  (API key: {API_KEY})")
     app.run(host="0.0.0.0", port=PORT, threaded=True)

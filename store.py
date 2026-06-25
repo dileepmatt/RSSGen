@@ -2,7 +2,7 @@ import json
 import threading
 from datetime import datetime, timezone, timedelta
 
-from config import DATA_FILE, MAX_ITEMS
+from config import DATA_FILE, MAX_ITEMS, logger
 
 scraped_items = []
 seen_magnets = set()
@@ -31,9 +31,9 @@ def load_data():
             item["date"] = datetime.fromisoformat(item["date"])
             seen_magnets.add(item["magnet"])
         scraped_items = data
-        print(f"Loaded {len(scraped_items)} items from disk.")
+        logger.info(f"Loaded {len(scraped_items)} items from disk.")
     except Exception as e:
-        print(f"Failed to load data.json: {e}")
+        logger.error(f"Failed to load data.json: {e}")
 
 
 def add_items(items):
