@@ -2,26 +2,11 @@ from config import PORT
 
 
 def caps_xml():
-    return """<?xml version="1.0" encoding="UTF-8"?>
-<caps>
-  <server title="RSSGen Torznab" />
-  <limits max="100" default="50" />
-  <searching>
-    <search available="yes" supportedParams="q" />
-    <movie-search available="yes" supportedParams="q" />
-  </searching>
-  <categories>
-    <category id="2000" name="Movies">
-      <subcat id="2010" name="Movies/Foreign" />
-      <subcat id="2060" name="Movies/Bollywood" />
-    </category>
-  </categories>
-</caps>"""
+    return '<?xml version="1.0" encoding="UTF-8"?>\n<caps>\n  <server title="RSSGen Torznab" />\n  <limits max="100" default="50" />\n  <searching>\n    <search available="yes" supportedParams="q" />\n    <movie-search available="yes" supportedParams="q" />\n  </searching>\n  <categories>\n    <category id="2000" name="Movies">\n      <subcat id="2010" name="Movies/Foreign" />\n      <subcat id="2060" name="Movies/Bollywood" />\n    </category>\n  </categories>\n</caps>'
 
 
 def error_xml(code, description):
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
-<error code="{code}" description="{description}" />"""
+    return f'<?xml version="1.0" encoding="UTF-8"?>\n<error code="{code}" description="{description}" />'
 
 
 def results_xml(items):
@@ -44,12 +29,14 @@ def results_xml(items):
     </item>
 """
 
-    return f"""<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:torznab="http://torznab.com/schemas/2015/feed">
-  <channel>
-    <title>RSSGen Torznab</title>
-    <description>Magnet links from movie sources</description>
-    <link>http://localhost:{PORT}</link>
-    <response offset="0" total="{len(items)}" />
-{entries}  </channel>
-</rss>"""
+    xml = f'<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:torznab="http://torznab.com/schemas/2015/feed">\n'
+    xml += '  <channel>\n'
+    xml += '    <title>RSSGen Torznab</title>\n'
+    xml += '    <description>Magnet links from movie sources</description>\n'
+    xml += f'    <link>http://localhost:{PORT}</link>\n'
+    xml += f'    <torznab:response offset="0" total="{len(items)}" />\n'
+    xml += entries
+    xml += '  </channel>\n'
+    xml += '</rss>'
+    return xml
