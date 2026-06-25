@@ -1,8 +1,14 @@
 import json
+import re
 import threading
 from datetime import datetime, timezone, timedelta
 
 from config import DATA_FILE, MAX_ITEMS, logger
+
+
+def magnet_id(magnet_link):
+    match = re.search(r'btih:([a-fA-F0-9]+)', magnet_link)
+    return match.group(1).lower() if match else magnet_link
 
 scraped_items = []
 seen_magnets = set()
@@ -29,7 +35,7 @@ def load_data():
             data = json.load(f)
         for item in data:
             item["date"] = datetime.fromisoformat(item["date"])
-            seen_magnets.add(item["magnet"])
+            seen_magnets.add(magnet_id(item["magnet"]))
         scraped_items = data
         logger.info(f"Loaded {len(scraped_items)} items from disk.")
     except Exception as e:
@@ -41,21 +47,22 @@ def add_items(items):
     with scrape_lock:
         new_count = 0
         for item in items:
-            if item["magnet"] not in seen_magnets:
-                seen_magnets.add(item["magnet"])
+            mid = magnet_id(item["magnet"])
+            if mid not in seen_magnets:
+                seen_magnets.add(mid)
                 scraped_items.insert(0, item)
                 new_count += 1
 
         cutoff = datetime.now(timezone.utc) - timedelta(weeks=4)
         expired = [i for i in scraped_items if i["date"] < cutoff]
         for r in expired:
-            seen_magnets.discard(r["magnet"])
+            seen_magnets.discard(magnet_id(r["magnet"]))
         scraped_items = [i for i in scraped_items if i["date"] >= cutoff]
 
         if len(scraped_items) > MAX_ITEMS:
             removed = scraped_items[MAX_ITEMS:]
             for r in removed:
-                seen_magnets.discard(r["magnet"])
+                seen_magnets.discard(magnet_id(r["magnet"]))
             scraped_items = scraped_items[:MAX_ITEMS]
 
         last_scrape_time = datetime.now(timezone.utc)
