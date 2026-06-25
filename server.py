@@ -10,9 +10,10 @@ from torznab import caps_xml, error_xml, results_xml
 app = Flask(__name__)
 
 
+@app.route("/", methods=["GET"])
 @app.route("/api", methods=["GET"])
 def torznab_api():
-    apikey = request.args.get("apikey", "")
+    apikey = request.args.get("apikey", "") or request.headers.get("X-Api-Key", "")
     if apikey != API_KEY:
         return Response(error_xml(100, "Incorrect API Key"), mimetype="application/xml", status=401)
 
@@ -47,6 +48,11 @@ def status():
         count = len(store.scraped_items)
         last = store.last_scrape_time.isoformat() if store.last_scrape_time else "never"
     return {"items": count, "last_scrape": last, "interval_seconds": SCRAPE_INTERVAL}
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return Response(error_xml(201, "Unknown endpoint"), mimetype="application/xml", status=404)
 
 
 if __name__ == "__main__":
