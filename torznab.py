@@ -18,7 +18,7 @@ def results_xml(items):
         magnet_escaped = item["magnet"].replace("&", "&amp;")
 
         seeders = item.get("seeders", 5000)
-        peers = item.get("peers", 20)
+        peers = item.get("peers", 5020)
 
         entries += f"""    <item>
       <title>{title_escaped}</title>
