@@ -25,6 +25,11 @@ def save_data():
         json.dump(data, f)
 
 
+def clean_title(title):
+    title = re.sub(r'\s*-?\s*ESub\b', '', title, flags=re.IGNORECASE).strip()
+    return title
+
+
 def load_data():
     global scraped_items, seen_magnets
     import os
@@ -34,15 +39,23 @@ def load_data():
         with open(DATA_FILE, "r") as f:
             data = json.load(f)
         deduped = []
+        dirty = False
         for item in data:
             item["date"] = datetime.fromisoformat(item["date"])
+            cleaned = clean_title(item["title"])
+            if cleaned != item["title"]:
+                item["title"] = cleaned
+                dirty = True
             mid = magnet_id(item["magnet"])
             if mid not in seen_magnets:
                 seen_magnets.add(mid)
                 deduped.append(item)
         scraped_items = deduped
-        if len(deduped) < len(data):
-            logger.info(f"Removed {len(data) - len(deduped)} duplicates from disk.")
+        if len(deduped) < len(data) or dirty:
+            if len(deduped) < len(data):
+                logger.info(f"Removed {len(data) - len(deduped)} duplicates from disk.")
+            if dirty:
+                logger.info("Cleaned titles (removed ESub etc).")
             save_data()
         logger.info(f"Loaded {len(scraped_items)} items from disk.")
     except Exception as e:
