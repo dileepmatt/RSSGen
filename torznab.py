@@ -17,6 +17,9 @@ def results_xml(items):
         link_escaped = item["link"].replace("&", "&amp;")
         magnet_escaped = item["magnet"].replace("&", "&amp;")
 
+        seeders = item.get("seeders", 5000)
+        peers = item.get("peers", 20)
+
         entries += f"""    <item>
       <title>{title_escaped}</title>
       <link>{link_escaped}</link>
@@ -26,6 +29,10 @@ def results_xml(items):
       <enclosure url="{magnet_escaped}" length="{item["size"]}" type="application/x-bittorrent;x-scheme-handler/magnet" />
       <torznab:attr name="category" value="{item["category"]}" />
       <torznab:attr name="magneturl" value="{magnet_escaped}" />
+      <torznab:attr name="seeders" value="{seeders}" />
+      <torznab:attr name="peers" value="{peers}" />
+      <torznab:attr name="downloadvolumefactor" value="0" />
+      <torznab:attr name="uploadvolumefactor" value="1" />
     </item>
 """
 
