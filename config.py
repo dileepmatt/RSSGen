@@ -4,7 +4,7 @@ from logging.handlers import RotatingFileHandler
 
 SCRAPE_INTERVAL = int(os.environ.get("SCRAPE_INTERVAL", 3600))
 API_KEY = os.environ.get("API_KEY", "rssgen123")
-MAX_ITEMS = int(os.environ.get("MAX_ITEMS", 500))
+MAX_ITEMS = int(os.environ.get("MAX_ITEMS", 5000))
 BASE_SITE = os.environ.get("BASE_SITE", "https://www.5movierulz.house").rstrip("/")
 PORT = int(os.environ.get("PORT", 6945))
 
@@ -26,7 +26,7 @@ logger.addHandler(console_handler)
 
 CATEGORY_PATHS = [
     "/category/malayalam-featured",
-    # "/category/bollywood-featured",
-    # "/category/telugu-featured",
-    # "/category/tamil-featured",
+    "/category/bollywood-featured",
+    "/category/telugu-featured",
+    "/category/tamil-featured",
 ]
