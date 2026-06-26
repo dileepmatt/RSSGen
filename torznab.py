@@ -33,6 +33,7 @@ def results_xml(items):
       <torznab:attr name="peers" value="{peers}" />
       <torznab:attr name="downloadvolumefactor" value="0" />
       <torznab:attr name="uploadvolumefactor" value="1" />
+      <torznab:attr name="flags" value="G_Internal" />
     </item>
 """
 

@@ -95,6 +95,8 @@ def scrape_magnets():
                         quality_text = magnet.get_text(strip=True).replace('\U0001f9f2', '').replace('GET THIS TORRENT', '').strip()
                         clean_title = f"{base_title} [{quality_text}]"
 
+                    clean_title = re.sub(r'\s*-?\s*ESub\b', '', clean_title, flags=re.IGNORECASE).strip()
+
                     size_match = re.search(r'xl=(\d+)', magnet_link)
                     size = int(size_match.group(1)) if size_match else 0
 
