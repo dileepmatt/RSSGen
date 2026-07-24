@@ -8,7 +8,7 @@ services:
     environment:
       - API_KEY=rssgen123
       - SCRAPE_INTERVAL=3600
-      - BASE_SITE=https://www.5movierulz.house
+      - BASE_SITE=https://www.5movierulz.vote
     volumes:
       - ./data:/app/data
     restart: unless-stopped
